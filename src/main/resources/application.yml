@@ -1,5 +1,5 @@
 server:
-  port: 8888
+  port: 8889
   servlet:
     context-path: /shiro
 spring:
@@ -19,7 +19,9 @@ spring:
     host: localhost
     port: 6379
     database: 0
+  cache:
+    ehcache:
+      config: classpath:ehcache.xml
 mybatis:
   type-aliases-package: com.young.shiro.sprngbootshiro.entity
   mapper-locations: classpath:mapper/*Mapper.xml
-

@@ -1,17 +1,23 @@
 package com.young.shiro.sprngbootshiro.config;
 
+import com.young.shiro.sprngbootshiro.filter.SignatureFilter;
+import com.young.shiro.sprngbootshiro.filter.WebFilter;
 import com.young.shiro.sprngbootshiro.realms.CustomerRealm;
+import net.sf.ehcache.CacheManager;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
-import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.util.ObjectUtils;
 
+import javax.servlet.Filter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -27,14 +33,18 @@ public class ShiroConfig {
     public ShiroFilterFactoryBean getShiroFilterFactoryBean(DefaultWebSecurityManager manager) {
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
         shiroFilterFactoryBean.setSecurityManager(manager);
+        Map<String, Filter> filterMap = new LinkedHashMap<>();
+        filterMap.put("sign", new SignatureFilter());
+        filterMap.put("web", new WebFilter());
+        shiroFilterFactoryBean.setFilters(filterMap);
 
         // 配置受限资源
-        Map<String, String> map = new HashMap<>(16);
+        Map<String, String> map = new LinkedHashMap<>(16);
         map.put("/user/login", "anon");
-        map.put("/user/register", "anon");
         map.put("/register.jsp", "anon");
 
-        map.put("/**", "authc");
+        map.put("/third/**", "sign");
+        map.put("/**", "web");
 
         // 设置默认登陆url
         shiroFilterFactoryBean.setLoginUrl("/login.jsp");
@@ -78,5 +88,22 @@ public class ShiroConfig {
         return customerRealm;
     }
 
+
+    @Bean
+    @ConditionalOnMissingBean
+    public net.sf.ehcache.CacheManager ehCacheCacheManager() {
+        return CacheManager.create();
+
+    }
+
+    /**
+     * 缓存管理器-使用Ehcache实现缓存
+     */
+    @Bean
+    public EhCacheManager ehCacheManager() {
+        EhCacheManager ehCacheManager = new EhCacheManager();
+        ehCacheManager.setCacheManager(CacheManager.getInstance());
+        return ehCacheManager;
+    }
 
 }

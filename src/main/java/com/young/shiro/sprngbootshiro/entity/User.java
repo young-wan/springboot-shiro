@@ -26,4 +26,6 @@ public class User {
     private String salt;
 
     List<Role> roleList;
+
+    private String deptName;
 }
